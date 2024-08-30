@@ -3,6 +3,7 @@ import pyautogui
 from mss import mss
 import cv2
 from PIL import Image
+from screen_splitter import *
 
 screen_width, screen_height = pyautogui.size()
 bounding_box = {
@@ -29,7 +30,8 @@ while True:
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
     frame = cv2.resize(frame, (bounding_box['width'], bounding_box['height']))
     
-
+    num_boxes = 100
+    frame, boxes = split_frame_into_boxes(frame, num_boxes)
     out.write(frame)
 
     
