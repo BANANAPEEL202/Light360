@@ -1,3 +1,6 @@
 pyautogui
 numpy 
 mss
+spotify
+colorthief
+python-dotenv
