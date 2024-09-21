@@ -1,18 +1,18 @@
 #include <FastLED.h>
 
 #define LED_PIN     5
-#define NUM_LEDS    50
-#define BRIGHTNESS  64
+#define NUM_LEDS    15
+#define BRIGHTNESS  128
 #define LED_TYPE    WS2811
 #define COLOR_ORDER RGB
 CRGB leds[NUM_LEDS];
-#define UPDATES_PER_SECOND 100
+#define UPDATES_PER_SECOND 75
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 
 
 int mode; 
-const byte numChars = 128;
+const byte numChars = 32;
 char receivedChars[numChars];   // an array to store the received data
 boolean newData = false;
 
@@ -33,7 +33,6 @@ void loop() {
     if (newData) {
 
         if (String(receivedChars).indexOf("colors") != -1) {
-                 AddColorToPalette(0, 8, 255, 0, 0);
             parseColors(String(receivedChars));
             
         }
@@ -57,10 +56,9 @@ void AddColorToPalette(uint8_t startIndex, uint8_t endIndex, uint8_t r,uint8_t g
 void FillLEDsFromPaletteColors( uint8_t colorIndex)
 {
     uint8_t brightness = 255;
-    
     for( int i = 0; i < NUM_LEDS; ++i) {
         leds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
-        colorIndex += 3;
+        colorIndex += 1;
     }
 }
 

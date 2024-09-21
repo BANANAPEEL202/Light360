@@ -8,9 +8,8 @@ print("Connected to Arduino")
 
 
 #serial.set_mode(1)
-serial.send("colors")
-
-#serial.send_colors([(255, 0, 0), (0, 255, 0)])
 
 
-#serial.send_colors(get_spotify_colors(5))
+print(get_spotify_colors(2))
+#serial.send_colors(get_spotify_colors(2))
+serial.send_colors([(0, 250, 0)])
