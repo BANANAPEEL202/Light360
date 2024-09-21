@@ -17,22 +17,20 @@ spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=CLIENT_ID,
                                                redirect_uri=REDIRECT_URI,
                                                scope=scope))
 
-def get_colors(image_url, track_name, num_colors):
+def get_spotify_colors(num_colors):
+    image_url, track_name = get_current_song_cover()
     file_path = "./cache/" + track_name + ".jpg"
     urllib.request.urlretrieve(image_url, file_path)
     color_thief = ColorThief(file_path)
     palette = color_thief.get_palette(color_count=num_colors, quality=1)
     return palette
 
-def get_current_song():
+def get_current_song_cover():
     # Get track information
     current_track = spotify.current_user_playing_track()
     track_id = current_track["item"]["id"]
     track_name = current_track['item']['name']
     artist_name = current_track['item']['artists'][0]['name']
     album_cover_url = current_track['item']['album']['images'][0]['url']
-    colors = get_colors(album_cover_url, track_name, 2)
-    print(colors)
+    return album_cover_url, track_name
 
-
-get_current_song()

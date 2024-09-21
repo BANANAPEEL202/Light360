@@ -4,3 +4,4 @@ mss
 spotify
 colorthief
 python-dotenv
+pyserial
