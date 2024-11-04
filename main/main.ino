@@ -57,6 +57,10 @@ void setup() {
         mode = "PARTY";
         request->send(200, "application/json", "{\"message\":\"Mode: PARTY\"}");
       }
+      else if (action == "WHITE"){
+        mode = "WHITE";
+        request->send(200, "application/json", "{\"message\":\"Mode: WHITE\"}");
+      }
     } else {
       request->send(400, "application/json", "{\"error\":\"No action specified\"}");
     }
@@ -101,6 +105,10 @@ void loop() {
       pacifica_loop();
       FastLED.show();
     }
+  }
+  else if (mode == "WHITE"){
+    fill_solid(leds, NUM_LEDS, CRGB::White); // Set all LEDs to black
+    FastLED.show();                          // Update the LED strip
   }
 }
 
