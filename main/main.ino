@@ -90,7 +90,7 @@ void loop() {
   else if (mode == "PARTY"){
     // Call the current pattern function once, updating the 'leds' array
     gPatterns[gCurrentPatternNumber]();
-
+    turnOffFirstLEDS()
     // send the 'leds' array out to the actual LED strip
     FastLED.show();  
     // insert a delay to keep the framerate modest
@@ -103,12 +103,16 @@ void loop() {
   else if (mode == "PACIFICA") {
     EVERY_N_MILLISECONDS( 20) {
       pacifica_loop();
+      turnOffFirstLEDS()
       FastLED.show();
     }
   }
   else if (mode == "WHITE"){
-    fill_solid(leds, NUM_LEDS, CRGB::White); // Set all LEDs to black
+    uint8_t whiteBrightness = 200; // Set the desired brightness level (0 to 255)
+    fill_solid(leds, NUM_LEDS, CRGB::White.nscale8(whiteBrightness)); // Scale the white color
+    turnOffFirstLEDS()
     FastLED.show();                          // Update the LED strip
+    delay(10); // Short delay to allow for other processes
   }
 }
 
@@ -124,6 +128,12 @@ void rainbow()
 {
   // FastLED's built-in rainbow generator
   fill_rainbow( leds, NUM_LEDS, gHue, 7);
+}
+
+void turnOffFirstLEDS() {
+  for (int i = 0; i < 10 && i < NUM_LEDS; i++) {
+    leds[i] = CRGB::Black; // Set first 10 LEDs to off
+  }
 }
 
 void rainbowWithGlitter() 
