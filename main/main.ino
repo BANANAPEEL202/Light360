@@ -95,6 +95,7 @@ void loop() {
     FastLED.show();  
     // insert a delay to keep the framerate modest
     FastLED.delay(1000/FRAMES_PER_SECOND); 
+    
 
     // do some periodic updates
     EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
