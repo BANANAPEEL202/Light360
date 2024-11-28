@@ -453,7 +453,7 @@ void fire_one_layer( CRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uin
   uint16_t wavescale_half = (wavescale / 2) + 20;
 
     // Add flickering effect by varying brightness dynamically using beatsin8()
-  uint8_t dynamic_brightness = beatsin8( 30, 100, 200); // Oscillating brightness for flicker
+  uint8_t dynamic_brightness = beatsin8( 30, 50, 150); // Oscillating brightness for flicker
 
   for( uint16_t i = 0; i < NUM_LEDS; i++) {
     waveangle += 250;
