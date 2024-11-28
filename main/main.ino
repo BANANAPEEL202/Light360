@@ -53,6 +53,9 @@ void setup() {
       } else if (action == "PACIFICA") {
         mode = "PACIFICA";
         request->send(200, "application/json", "{\"message\":\"Mode: PACIFICA\"}");
+      } else if (action == "FIRE") {
+        mode = "FIRE";
+        request->send(200, "application/json", "{\"message\":\"Mode: FIRE\"}");
       } else if (action == "PARTY"){
         mode = "PARTY";
         request->send(200, "application/json", "{\"message\":\"Mode: PARTY\"}");
@@ -60,6 +63,10 @@ void setup() {
       else if (action == "WHITE"){
         mode = "WHITE";
         request->send(200, "application/json", "{\"message\":\"Mode: WHITE\"}");
+      }
+      else if (action == "SANTA"){
+        mode = "SANTA";
+        request->send(200, "application/json", "{\"message\":\"Mode: SANTA\"}");
       }
     } else {
       request->send(400, "application/json", "{\"error\":\"No action specified\"}");
@@ -90,12 +97,12 @@ void loop() {
   else if (mode == "PARTY"){
     // Call the current pattern function once, updating the 'leds' array
     gPatterns[gCurrentPatternNumber]();
-    turnOffFirstLEDS()
+    turnOffFirstLEDS();
     // send the 'leds' array out to the actual LED strip
     FastLED.show();  
     // insert a delay to keep the framerate modest
     FastLED.delay(1000/FRAMES_PER_SECOND); 
-    
+
 
     // do some periodic updates
     EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
@@ -104,14 +111,26 @@ void loop() {
   else if (mode == "PACIFICA") {
     EVERY_N_MILLISECONDS( 20) {
       pacifica_loop();
-      turnOffFirstLEDS()
+      turnOffFirstLEDS();
+      FastLED.show();
+    }
+  }
+  else if (mode == "FIRE") {
+    EVERY_N_MILLISECONDS( 20) {
+      fire_loop();
+      turnOffFirstLEDS();
       FastLED.show();
     }
   }
   else if (mode == "WHITE"){
-    uint8_t whiteBrightness = 200; // Set the desired brightness level (0 to 255)
-    fill_solid(leds, NUM_LEDS, CRGB::White.nscale8(whiteBrightness)); // Scale the white color
-    turnOffFirstLEDS()
+    fill_solid(leds, NUM_LEDS, CRGB::White); // Scale the white color
+    turnOffFirstLEDS();
+    FastLED.show();                          // Update the LED strip
+    delay(10); // Short delay to allow for other processes
+  }
+  else if (mode == "SANTA"){
+    santa();
+    turnOffFirstLEDS();
     FastLED.show();                          // Update the LED strip
     delay(10); // Short delay to allow for other processes
   }
@@ -132,7 +151,7 @@ void rainbow()
 }
 
 void turnOffFirstLEDS() {
-  for (int i = 0; i < 10 && i < NUM_LEDS; i++) {
+  for (int i = 0; i < 16 && i < NUM_LEDS; i++) {
     leds[i] = CRGB::Black; // Set first 10 LEDs to off
   }
 }
@@ -318,7 +337,7 @@ void pacifica_loop()
   // Render each of four layers, with different scales and speeds, that vary over time
   pacifica_one_layer( pacifica_palette_1, sCIStart1, beatsin16( 3, 11 * 256, 14 * 256), beatsin8( 10, 70, 130), 0-beat16( 301) );
   pacifica_one_layer( pacifica_palette_2, sCIStart2, beatsin16( 4,  6 * 256,  9 * 256), beatsin8( 17, 40,  80), beat16( 401) );
-  pacifica_one_layer( pacifica_palette_3, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
+  pacifica_one_layer( pacifica_palette_2, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
   pacifica_one_layer( pacifica_palette_3, sCIStart4, 5 * 256, beatsin8( 8, 10,28), beat16(601));
 
   // Add brighter 'whitecaps' where the waves lines up more
@@ -373,3 +392,122 @@ void pacifica_deepen_colors()
     leds[i] |= CRGB( 2, 5, 7);
   }
 }
+
+// Fire Palette 1 with deeper reds and less orange
+CRGBPalette16 fire_palette_1 = 
+    { 0x000000, 0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF1A00, 0xFF3300, 0xFF6600, 
+      0xFF6600, 0xFF9900, 0xFFB300, 0xFFCC00, 0xFFFF00, 0xFFCC33, 0xFF9933, 0xFF0000 };
+
+// Fire Palette 2 with a stronger red base and less yellow
+CRGBPalette16 fire_palette_2 = 
+    { 0x000000, 0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF3300, 0xFF4D00, 0xFF6600, 
+      0xFF6600, 0xFF9900, 0xFFB300, 0xFFCC00, 0xFFFF00, 0xFFB333, 0xFF6600, 0xFF0000 };
+
+// Fire Palette 3 with a more subtle yellow transition for realistic red fire
+CRGBPalette16 fire_palette_3 = 
+    { 0x000000, 0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF1A00, 0xFF3300, 0xFF6600, 
+      0xFF6600, 0xFF9900, 0xFFB300, 0xFFCC00, 0xFFFF00, 0xFFB333, 0xFF3300, 0xFF0000 };
+
+
+
+void fire_loop()
+{
+  // Increment the four "color index start" counters, one for each wave layer.
+  // Each is incremented at a different speed, and the speeds vary over time.
+  static uint16_t sCIStart1, sCIStart2, sCIStart3, sCIStart4;
+  static uint32_t sLastms = 0;
+  uint32_t ms = GET_MILLIS();
+  uint32_t deltams = ms - sLastms;
+  sLastms = ms;
+  uint16_t speedfactor1 = beatsin16(3, 179, 269);
+  uint16_t speedfactor2 = beatsin16(4, 179, 269);
+  uint32_t deltams1 = (deltams * speedfactor1) / 256;
+  uint32_t deltams2 = (deltams * speedfactor2) / 256;
+  uint32_t deltams21 = (deltams1 + deltams2) / 2;
+  sCIStart1 += (deltams1 * beatsin88(1011,10,13));
+  sCIStart2 -= (deltams21 * beatsin88(777,8,11));
+  sCIStart3 -= (deltams1 * beatsin88(501,5,7));
+  sCIStart4 -= (deltams2 * beatsin88(257,4,6));
+
+  // Clear out the LED array to black
+  fill_solid( leds, NUM_LEDS, CRGB( 0, 0, 0));
+
+  // Render each of four layers, with different scales and speeds, that vary over time
+  fire_one_layer( fire_palette_1, sCIStart1, beatsin16( 3, 11 * 256, 14 * 256), beatsin8( 10, 70, 130), 0-beat16( 301) );
+  fire_one_layer( fire_palette_2, sCIStart2, beatsin16( 4,  6 * 256,  9 * 256), beatsin8( 17, 40,  80), beat16( 401) );
+  fire_one_layer( fire_palette_2, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
+  fire_one_layer( fire_palette_3, sCIStart4, 5 * 256, beatsin8( 8, 10,28), beat16(601));
+
+  // Add brighter 'whitecaps' where the waves lines up more
+  //fire_add_whitecaps();
+
+  // Deepen the blues and greens a bit
+  fire_deepen_colors();
+}
+
+// Add one layer of waves into the led array
+void fire_one_layer( CRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff)
+{
+  uint16_t ci = cistart;
+  uint16_t waveangle = ioff;
+  uint16_t wavescale_half = (wavescale / 2) + 20;
+
+    // Add flickering effect by varying brightness dynamically using beatsin8()
+  uint8_t dynamic_brightness = beatsin8( 30, 100, 200); // Oscillating brightness for flicker
+
+  for( uint16_t i = 0; i < NUM_LEDS; i++) {
+    waveangle += 250;
+    uint16_t s16 = sin16( waveangle ) + 32768;
+    uint16_t cs = scale16( s16 , wavescale_half ) + wavescale_half;
+    ci += cs;
+    uint16_t sindex16 = sin16( ci) + 32768;
+    uint8_t sindex8 = scale16( sindex16, 240);
+    //CRGB c = ColorFromPalette( p, sindex8, bri, LINEARBLEND);
+    CRGB c = ColorFromPalette( p, sindex8, dynamic_brightness, LINEARBLEND); // Apply dynamic brightness
+
+
+    leds[i] += c;
+  }
+}
+
+// Add extra 'white' to areas where the four layers of light have lined up brightly
+void fire_add_whitecaps()
+{
+  uint8_t basethreshold = beatsin8( 9, 55, 65);
+  uint8_t wave = beat8( 7 );
+  
+  for( uint16_t i = 0; i < NUM_LEDS; i++) {
+    uint8_t threshold = scale8( sin8( wave), 20) + basethreshold;
+    wave += 7;
+    uint8_t l = leds[i].getAverageLight();
+    if( l > threshold) {
+      uint8_t overage = l - threshold;
+      uint8_t overage2 = qadd8( overage, overage);
+      leds[i] += CRGB( overage, overage2, qadd8( overage2, overage2));
+    }
+  }
+}
+
+// Deepen the reds and oranges
+void fire_deepen_colors()
+{
+  for( uint16_t i = 0; i < NUM_LEDS; i++) {
+    leds[i].red = scale8( leds[i].red,  255);   // Keep red as is
+    leds[i].green = scale8( leds[i].green, 120); // Lower green intensity for more fire effect
+    leds[i].blue = scale8( leds[i].blue, 20);    // Reduce blue for fire effect
+    leds[i] |= CRGB( random( 10, 30), random( 10, 20), 0);  // Add a little extra red/yellow warmth
+  }
+}
+
+void santa(){
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if ((i / 5) % 2 == 0) {
+      leds[i] = CRGB::Green;  // Every group of 5 LEDs, set to green
+    } else {
+      leds[i] = CRGB::Red;    // Every other group of 5 LEDs, set to red
+    }
+  }
+}
+
+
+
